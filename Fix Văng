@@ -1,0 +1,109 @@
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Tạo Screen GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "AntiCrashGUI"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Tạo khung chứa nút
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 220, 0, 80)
+frame.Position = UDim2.new(0.02, 0, 0.8, 0)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Màu nền khung
+frame.BackgroundTransparency = 0.2
+frame.Active = true -- Kích hoạt để kéo thả
+frame.Draggable = true -- Cho phép kéo thả
+frame.Parent = screenGui
+
+-- Bo tròn khung
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0.15, 0)
+frameCorner.Parent = frame
+
+-- Thêm tiêu đề
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0.4, 0)
+titleLabel.Position = UDim2.new(0, 0, 0, 5)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "Chống Văng"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 18
+titleLabel.Parent = frame
+
+-- Tạo nút bật/tắt
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0.9, 0, 0.5, 0)
+button.Position = UDim2.new(0.05, 0, 0.5, 0)
+button.Text = "Bật chống văng"
+button.BackgroundColor3 = Color3.fromRGB(0, 170, 255) -- Màu nút
+button.TextColor3 = Color3.fromRGB(255, 255, 255) -- Màu chữ
+button.Font = Enum.Font.GothamBold -- Phông chữ hiện đại
+button.TextSize = 16
+button.Parent = frame
+
+-- Bo tròn nút
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0.3, 0)
+buttonCorner.Parent = button
+
+-- Hiệu ứng hover cho nút
+button.MouseEnter:Connect(function()
+    button.BackgroundColor3 = Color3.fromRGB(0, 200, 255) -- Màu khi hover
+end)
+
+button.MouseLeave:Connect(function()
+    button.BackgroundColor3 = Color3.fromRGB(0, 170, 255) -- Màu bình thường
+end)
+
+-- Chức năng bật/tắt chống văng
+local isAntiCrashEnabled = false
+
+local function toggleAntiCrash()
+    isAntiCrashEnabled = not isAntiCrashEnabled
+    if isAntiCrashEnabled then
+        button.Text = "Tắt chống văng"
+        button.BackgroundColor3 = Color3.fromRGB(0, 255, 100) -- Màu xanh lá khi bật
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics, false) -- Vô hiệu hóa trạng thái dễ văng
+    else
+        button.Text = "Bật chống văng"
+        button.BackgroundColor3 = Color3.fromRGB(255, 100, 100) -- Màu đỏ khi tắt
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics, true) -- Bật lại trạng thái
+    end
+end
+
+-- Kết nối sự kiện click
+button.MouseButton1Click:Connect(toggleAntiCrash)
+
+-- Tính năng kéo thả toàn bộ giao diện
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+    end
+end)
+
+frame.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
